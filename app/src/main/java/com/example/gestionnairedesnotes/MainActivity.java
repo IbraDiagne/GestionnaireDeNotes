@@ -22,6 +22,10 @@ import com.example.gestionnairedesnotes.model.Note;
 
 import java.util.List;
 
+import android.graphics.Color;
+import android.text.Editable;
+import android.text.TextWatcher;
+
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
@@ -56,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
         loadNotes();
         setupFab();
         setupPalette();
+        setupSearch();
+        setupBtnFavoris();
     }
 
     private void loadNotes() {
@@ -68,6 +74,46 @@ public class MainActivity extends AppCompatActivity {
             recyclerView.setVisibility(View.VISIBLE);
         }
         adapter.setNotes(notes);
+    }
+    private void filterNotes(String query, boolean favoriOnly) {
+        List<Note> toutesLesNotes = dbHelper.getAllNotes();
+        List<Note> notesFiltrees = NoteFilter.filterCombined(toutesLesNotes, query, favoriOnly);
+
+        if (notesFiltrees.isEmpty()) {
+            tvAucuneNotes.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            tvAucuneNotes.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
+        adapter.setNotes(notesFiltrees);
+    }
+
+    private void setupSearch() {
+        searchView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterNotes(s.toString(), favoriOnly);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    private void setupBtnFavoris() {
+        btnFavoris.setOnClickListener(v -> {
+            favoriOnly = !favoriOnly;
+            if (favoriOnly) {
+                btnFavoris.setTextColor(Color.parseColor("#219653"));
+            } else {
+                btnFavoris.setTextColor(Color.parseColor("#000000"));
+            }
+            filterNotes(searchView.getText().toString(), favoriOnly);
+        });
     }
 
     private void setupFab() {
